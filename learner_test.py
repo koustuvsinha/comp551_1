@@ -32,6 +32,11 @@ class LearnerTest(unittest.TestCase):
 		lr.fit()
 		lr.predict(X_test)
 
+	def test_naive(self):
+		print 'Naive Bayes'
+		ln = learner.NaiveBayes(X,y_cat,alpha=0.00000001)
+		ln.fit()
+		ln.predict(X_test)
 
 if __name__ == '__main__':
     unittest.main()

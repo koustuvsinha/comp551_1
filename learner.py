@@ -108,3 +108,51 @@ class linearRegression():
 		p = np.dot(X,np.transpose(self.W))
 		print p
 
+class NaiveBayes():
+	def __init__(self, X=[0],y=0,alpha=0.1,cutoff=0):
+		self.X = X
+		self.y = y
+		self.m, self.n = X.shape
+		self.alpha = alpha
+		self.cutoff = cutoff
+
+	def value_counts(self,k):
+		uniq = set(list(k))
+		d = {}
+		for u in uniq:
+			d[u] = np.sum(k==u)
+		return d
+
+	def fit(self):
+		self.count_pos = [self.value_counts(k) for k in np.transpose(self.X[self.y==1])]
+		self.count_neg = [self.value_counts(k) for k in np.transpose(self.X[self.y==0])]
+		self.total_pos = float(sum(self.y==1))
+		self.total_neg = float(sum(self.y==0))
+		total = self.total_pos + self.total_neg
+		self.prior_prob_pos = self.total_pos / total
+		self.prior_prob_neg = self.total_pos / total
+		#print self.count_pos
+		#print self.count_neg
+
+	def predict(self,X_test):
+		m,n = X_test.shape
+		predictions = np.zeros(m)
+
+		for i,rows in enumerate(X_test):
+			probXneg = np.zeros(n)
+			probXpos = np.zeros(n)
+			for j, value in enumerate(rows):
+				#print value
+				n_count = self.count_neg[j].get(value,0)
+				p_count = self.count_pos[j].get(value,0)
+				probXpos = (p_count + self.alpha) / (self.total_pos + self.alpha * len(self.count_pos[j]))
+				probXneg = (n_count + self.alpha) / (self.total_neg + self.alpha * len(self.count_neg[j]))
+			predictions[i] = np.log(self.prior_prob_pos) + np.sum(np.log(probXpos)) - np.log(self.prior_prob_neg) - np.sum(np.log(probXneg))
+		p = predictions
+		#print p
+		np.putmask(p, p >= self.cutoff, 1.0)
+		np.putmask(p, p < self.cutoff, 0.0)
+		print p
+
+
+
