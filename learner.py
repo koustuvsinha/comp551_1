@@ -9,18 +9,8 @@ import numpy as np
 
 class logistic:
 
-	def __init__(self, X=[0], y=0, alpha=0.07,iter_n=9000, W=0, lambd=0.01):
-		# store dimensions for future use
-		# m : Number of rows
-		# n : Number of features
-		self.m, self.n = X.shape
-		# padding of X with 1's
-		ones = np.array([1] * self.m).reshape(self.m, 1)
-		self.X = np.append(ones,X,axis=1)
-		self.y = y
-		# Initialize W
-		# Can be modified to random values
-		self.W = np.array([0.0] * (self.n + 1))
+	def __init__(self, alpha=0.07,iter_n=9000, lambd=0.01):
+		# initialization
 		self.alpha = alpha
 		self.iter_n = iter_n # Number of iterations for gradient descent
 		self.lambd = lambd # regularization
@@ -54,9 +44,20 @@ class logistic:
 			#grad = np.sum(np.dot(diff,self.X))
 			#self.W = self.W - self.alpha * (1.0 / self.m) * grad
 			cost = self.loss()
-			print 'Iteration',i,'\tCost',cost
+			#print 'Iteration',i,'\tCost',cost
 
-	def fit(self):
+	def fit(self,X,y):
+		# store dimensions for future use
+		# m : Number of rows
+		# n : Number of features
+		self.m, self.n = X.shape
+		# padding of X with 1's
+		ones = np.array([1] * self.m).reshape(self.m, 1)
+		self.X = np.append(ones,X,axis=1)
+		self.y = y
+		# Initialize W
+		# Can be modified to random values
+		self.W = np.array([0.0] * (self.n + 1))
 		self.gradient_descent()
 
 	def predict(self, X):
@@ -68,14 +69,11 @@ class logistic:
 		np.putmask(p, p >= 0.5, 1.0)
 		np.putmask(p, p < 0.5, 0.0)
 		print p
+		return p
 
 class linearRegression():
 	def __init__(self, X=[0], y=0, alpha=0.07, model=1,iter_n=100, W=0, lambd=0.01):
-		self.m, self.n = X.shape
-		ones = np.array([1] * self.m).reshape(self.m, 1)
-		self.X = np.append(ones,X,axis=1)
-		self.y = y
-		self.W = np.array([0.0] * (self.n + 1))
+		# Initialization
 		self.alpha = alpha
 		self.iter_n = iter_n # Number of iterations for gradient descent
 		self.lambd = lambd # regularization
@@ -95,9 +93,14 @@ class linearRegression():
 			#grad = np.sum(np.dot(diff,self.X))
 			#self.W = self.W - self.alpha * (1.0 / self.m) * grad
 			cost = self.loss()
-			print 'Iteration',i,'\tCost',cost
+			#print 'Iteration',i,'\tCost',cost
 
-	def fit(self):
+	def fit(self,X,y):
+		self.m, self.n = X.shape
+		ones = np.array([1] * self.m).reshape(self.m, 1)
+		self.X = np.append(ones,X,axis=1)
+		self.y = y
+		self.W = np.array([0.0] * (self.n + 1))
 		self.gradient_descent()
 
 	def predict(self, X):
@@ -107,12 +110,11 @@ class linearRegression():
 		X = np.append(ones,X,axis=1)
 		p = np.dot(X,np.transpose(self.W))
 		print p
+		return p
 
 class NaiveBayes():
 	def __init__(self, X=[0],y=0,alpha=0.1,cutoff=0):
-		self.X = X
-		self.y = y
-		self.m, self.n = X.shape
+		# Initialization
 		self.alpha = alpha
 		self.cutoff = cutoff
 
@@ -123,7 +125,10 @@ class NaiveBayes():
 			d[u] = np.sum(k==u)
 		return d
 
-	def fit(self):
+	def fit(self,X,y):
+		self.X = X
+		self.y = y
+		self.m, self.n = X.shape
 		self.count_pos = [self.value_counts(k) for k in np.transpose(self.X[self.y==1])]
 		self.count_neg = [self.value_counts(k) for k in np.transpose(self.X[self.y==0])]
 		self.total_pos = float(sum(self.y==1))
@@ -153,6 +158,26 @@ class NaiveBayes():
 		np.putmask(p, p >= self.cutoff, 1.0)
 		np.putmask(p, p < self.cutoff, 0.0)
 		print p
+		return p
+
+# Implementing cross validation keeping a bit similarity with scikit-learn api
+class cross_validation:
+	def cross_val_score(self,clf,X,y,cv=1):
+		scores = []
+		for i in range(cv):
+			splitX = np.split(X,cv,axis=0)
+			splitY = np.split(y,cv,axis=0)
+			X_test = splitX.pop(i)
+			X_train = np.concatenate(splitX,axis=0)
+			y_test = splitY.pop(i)
+			y_train = np.concatenate(splitY,axis=0)
+			clf.fit(X_train,y_train)
+			y_pred = clf.predict(X_test)
+			scores.append(y_pred.tolist())
+			print "Iteration ", i, "Accuracy :"
+			print np.mean(y_test == y_pred)
+		return scores
+
 
 
 
