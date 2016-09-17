@@ -46,14 +46,27 @@ class logistic:
 			cost = self.loss()
 			#print 'Iteration',i,'\tCost',cost
 
+	def featureNormalize(self,X):
+		X = np.asarray(X)
+		mean = np.mean(X,axis=0)
+		std = np.std(X,axis=0)
+		std[std == 0.0] = 1.0
+		X = X.copy()
+		Xr = np.rollaxis(X, 0)
+		Xr = Xr - mean
+		Xr /= std
+		return Xr
+
 	def fit(self,X,y):
 		# store dimensions for future use
 		# m : Number of rows
 		# n : Number of features
 		self.m, self.n = X.shape
 		# padding of X with 1's
+		# Feature Normalization
+		Xn = self.featureNormalize(X)
 		ones = np.array([1] * self.m).reshape(self.m, 1)
-		self.X = np.append(ones,X,axis=1)
+		self.X = np.append(ones,Xn,axis=1)
 		self.y = y
 		# Initialize W
 		# Can be modified to random values
@@ -62,10 +75,12 @@ class logistic:
 
 	def predict(self, X):
 		X = np.array(X)
-		m = X.shape[0]
+		# Feature Normalization
+		Xn = self.featureNormalize(X)
+		m = Xn.shape[0]
 		ones = np.array([1] * m).reshape(m, 1)
-		X = np.append(ones,X,axis=1)
-		p = self.sigmoid(np.dot(X,np.transpose(self.W)))
+		Xi = np.append(ones,Xn,axis=1)
+		p = self.sigmoid(np.dot(Xi,np.transpose(self.W)))
 		np.putmask(p, p >= 0.5, 1.0)
 		np.putmask(p, p < 0.5, 0.0)
 		print p
