@@ -47,12 +47,12 @@ class logistic:
 			#print 'Iteration',i,'\tCost',cost
 
 	def featureNormalize(self,X):
-		X = np.asarray(X)
-		mean = np.mean(X,axis=0)
-		std = np.std(X,axis=0)
+		Xc = X.copy()
+		Xc = np.asarray(Xc)
+		mean = np.mean(Xc,axis=0)
+		std = np.std(Xc,axis=0)
 		std[std == 0.0] = 1.0
-		X = X.copy()
-		Xr = np.rollaxis(X, 0)
+		Xr = np.rollaxis(Xc, 0)
 		Xr = Xr - mean
 		Xr /= std
 		return Xr
@@ -62,9 +62,10 @@ class logistic:
 		# m : Number of rows
 		# n : Number of features
 		self.m, self.n = X.shape
-		# padding of X with 1's
 		# Feature Normalization
-		Xn = self.featureNormalize(X)
+		Xn = X.copy()
+		Xn = self.featureNormalize(Xn)
+		# padding of X with 1's
 		ones = np.array([1] * self.m).reshape(self.m, 1)
 		self.X = np.append(ones,Xn,axis=1)
 		self.y = y
@@ -76,7 +77,8 @@ class logistic:
 	def predict(self, X):
 		X = np.array(X)
 		# Feature Normalization
-		Xn = self.featureNormalize(X)
+		Xn = X.copy()
+		Xn = self.featureNormalize(Xn)
 		m = Xn.shape[0]
 		ones = np.array([1] * m).reshape(m, 1)
 		Xi = np.append(ones,Xn,axis=1)
@@ -110,10 +112,23 @@ class linearRegression():
 			cost = self.loss()
 			#print 'Iteration',i,'\tCost',cost
 
+	def featureNormalize(self,X):
+		Xc = X.copy()
+		Xc = np.asarray(Xc)
+		mean = np.mean(Xc,axis=0)
+		std = np.std(Xc,axis=0)
+		std[std == 0.0] = 1.0
+		Xr = np.rollaxis(Xc, 0)
+		Xr = Xr - mean
+		Xr /= std
+		return Xr
+
 	def fit(self,X,y):
 		self.m, self.n = X.shape
+		Xn = X.copy()
+		Xn = self.featureNormalize(Xn)
 		ones = np.array([1] * self.m).reshape(self.m, 1)
-		self.X = np.append(ones,X,axis=1)
+		self.X = np.append(ones,Xn,axis=1)
 		self.y = y
 		self.W = np.array([0.0] * (self.n + 1))
 		self.gradient_descent()
@@ -121,9 +136,11 @@ class linearRegression():
 	def predict(self, X):
 		X = np.array(X)
 		m = X.shape[0]
+		Xn = X.copy()
+		Xn = self.featureNormalize(Xn)
 		ones = np.array([1] * m).reshape(m, 1)
-		X = np.append(ones,X,axis=1)
-		p = np.dot(X,np.transpose(self.W))
+		Xr = np.append(ones,Xn,axis=1)
+		p = np.dot(Xr,np.transpose(self.W))
 		print p
 		return p
 
