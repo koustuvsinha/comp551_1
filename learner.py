@@ -151,6 +151,7 @@ class NaiveBayes():
 		self.cutoff = cutoff
 
 	def value_counts(self,k):
+		#print k
 		uniq = set(list(k))
 		d = {}
 		for u in uniq:
@@ -161,8 +162,11 @@ class NaiveBayes():
 		self.X = X
 		self.y = y
 		self.m, self.n = X.shape
-		self.count_pos = [self.value_counts(k) for k in np.transpose(self.X[self.y==1])]
-		self.count_neg = [self.value_counts(k) for k in np.transpose(self.X[self.y==0])]
+		rec_where_pos = self.X[self.y == 1].T
+		rec_where_neg = self.X[self.y == 0].T
+		#print rec_where_pos
+		self.count_pos = [self.value_counts(rec_where_pos[k]) for k in rec_where_pos]
+		self.count_neg = [self.value_counts(rec_where_neg[k]) for k in rec_where_neg]
 		self.total_pos = float(sum(self.y==1))
 		self.total_neg = float(sum(self.y==0))
 		total = self.total_pos + self.total_neg
@@ -174,10 +178,12 @@ class NaiveBayes():
 	def predict(self,X_test):
 		m,n = X_test.shape
 		predictions = np.zeros(m)
-
+		X_test = np.array(X_test)
 		for i,rows in enumerate(X_test):
 			probXneg = np.zeros(n)
 			probXpos = np.zeros(n)
+			#print rows
+			#print i
 			for j, value in enumerate(rows):
 				#print value
 				n_count = self.count_neg[j].get(value,0)
