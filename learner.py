@@ -85,7 +85,7 @@ class logistic:
 		p = self.sigmoid(np.dot(Xi,np.transpose(self.W)))
 		np.putmask(p, p >= 0.5, 1.0)
 		np.putmask(p, p < 0.5, 0.0)
-		print p
+		#print p
 		return p
 
 class linearRegression():
@@ -141,11 +141,11 @@ class linearRegression():
 		ones = np.array([1] * m).reshape(m, 1)
 		Xr = np.append(ones,Xn,axis=1)
 		p = np.dot(Xr,np.transpose(self.W))
-		print p
+		#print p
 		return p
 
 class NaiveBayes():
-	def __init__(self, X=[0],y=0,alpha=0.1,cutoff=0):
+	def __init__(self, X=[0],y=0,alpha=0.001,cutoff=0.5):
 		# Initialization
 		self.alpha = alpha
 		self.cutoff = cutoff
@@ -202,19 +202,23 @@ class NaiveBayes():
 class cross_validation:
 	def cross_val_score(self,clf,X,y,cv=1):
 		scores = []
+		preds = []
+		splitX = np.split(np.array(X),cv,axis=0)
+		splitY = np.split(np.array(y),cv,axis=0)
 		for i in range(cv):
-			splitX = np.split(X,cv,axis=0)
-			splitY = np.split(y,cv,axis=0)
-			X_test = splitX.pop(i)
-			X_train = np.concatenate(splitX,axis=0)
-			y_test = splitY.pop(i)
-			y_train = np.concatenate(splitY,axis=0)
+			splX = splitX[:]
+			splY = splitY[:]
+			X_test = splX.pop(i)
+			X_train = np.concatenate(splX,axis=0)
+			y_test = splY.pop(i)
+			y_train = np.concatenate(splY,axis=0)
 			clf.fit(X_train,y_train)
 			y_pred = clf.predict(X_test)
-			scores.append(y_pred.tolist())
-			print "Iteration ", i, "Accuracy :"
-			print np.mean(y_test == y_pred)
-		return scores
+			preds.extend(y_pred.tolist())
+			score =  np.mean(y_test == y_pred)
+			print "Iteration ", i, "Accuracy :",score
+			scores.append(score)
+		return scores,preds
 
 
 
