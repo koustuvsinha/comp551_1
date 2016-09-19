@@ -159,14 +159,14 @@ class NaiveBayes():
 		return d
 
 	def fit(self,X,y):
-		self.X = X
-		self.y = y
+		self.X = np.array(X)
+		self.y = np.array(y)
 		self.m, self.n = X.shape
 		rec_where_pos = self.X[self.y == 1].T
 		rec_where_neg = self.X[self.y == 0].T
 		#print rec_where_pos
-		self.count_pos = [self.value_counts(rec_where_pos[k]) for k in rec_where_pos]
-		self.count_neg = [self.value_counts(rec_where_neg[k]) for k in rec_where_neg]
+		self.count_pos = [self.value_counts(k) for k in rec_where_pos]
+		self.count_neg = [self.value_counts(k) for k in rec_where_neg]
 		self.total_pos = float(sum(self.y==1))
 		self.total_neg = float(sum(self.y==0))
 		total = self.total_pos + self.total_neg
