@@ -12,14 +12,15 @@ DATA_FILE = 'final_data_v2.csv'
 REG_DATA_FILE = 'RegressionTest1.CSV'
 GenderMap = {'M' : 0, 'F' : 1}
 UNIQUE_IDS = 8711
+FINAL_SUBMISSION_FILE = 'FinalSubmission.csv'
 
 class Runner():
     """docstring for Runner"""
     def __init__(self, arg):
         self.data = pd.read_csv(DATA_FILE)
         self.dataReg = pd.read_csv(REG_DATA_FILE)
-        
-
+        validation()
+        prediction()
 
 
     def transformYearData(self,num_users):
@@ -147,6 +148,18 @@ class Runner():
         """ Calculate Mean Squared Error for Regression """
         return ((y_pred - y_true) ** 2).mean()
 
+    def getRegData(self, stype='train'):
+        """ Pass X,y needed for regression """
+        X = []
+        y = []
+        reg = self.dataReg
+        if stype == 'train':
+            X = reg[['AGE','GENDER','AvgTimeForMontrealMarathon2012','AvgTimeForMontrealMarathon2013','AvgTimeForMontrealMarathon2014','AvgTimeInAllMarathons','AvgTimeInAllEvents','TotalNoOfMarathonEvents']]
+            y = reg.AvgTimeForMontrealMarathon2015
+        else:
+            X = reg[['AGE','GENDER','AvgTimeForMontrealMarathon2013','AvgTimeForMontrealMarathon2014','AvgTimeForMontrealMarathon2015','AvgTimeInAllMarathons','AvgTimeInAllEvents','TotalNoOfMarathonEvents']]
+        return X,y
+
     def validation(self):
         """ Validate all algorithms for train test set """
         ## feature engineering for classification
@@ -163,9 +176,7 @@ class Runner():
         lnb.fit(X_train,y_train)
         y_p1 = lnb.predict(X_test)
         print 'Accuracy:',accuracy(y_p1,y_test)
-        reg = self.dataReg
-        X = reg[['AGE','GENDER','AvgTimeForMontrealMarathon2012','AvgTimeForMontrealMarathon2013','AvgTimeForMontrealMarathon2014','AvgTimeInAllMarathons','AvgTimeInAllEvents','TotalNoOfMarathonEvents']]
-        y = reg.AvgTimeForMontrealMarathon2015
+        X,y = getRegData()
         X_train,X_test,y_train,y_test = split_test_train(X,y)
         print 'Running Linear Regression'
         lr = ln.linearRegression(iter_n=500)
@@ -184,6 +195,18 @@ class Runner():
         print 'Predicting by Logistic Regression'
         y_log = self.logistic.predict(X)
         print 'Predicted Rows : ', len(y_log)
+        print 'Predicting by Naive Bayes'
+        y_naive = self.naive.predict(X)
+        print 'Predicted Rows :', len(y_naive)
+        X,y = getRegData(stype='predict')
+        print 'Predicting Linear Regression'
+        y_lin = self.linear.predict(X)
+        print 'Predicted Rows :',len(y_lin)
+        final_df.PARTICIPANT_ID = range(UNIQUE_IDS)
+        final_df.Y1_LOGISTIC = y_log
+        final_df.Y1_NAIVEBAYES = y_naive
+        final_df.Y2_REGRESSION = y_lin
+        final_df.to_csv(FINAL_SUBMISSION_FILE)
 
 
 
