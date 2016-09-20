@@ -112,6 +112,7 @@ class linearRegression():
 			cost = self.loss()
 			#print 'Iteration',i,'\tCost',cost
 
+	# Feature Normalization Snippet
 	def featureNormalize(self,X):
 		Xc = X.copy()
 		Xc = np.asarray(Xc)
