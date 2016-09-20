@@ -13,6 +13,7 @@ REG_DATA_FILE = 'RegressionTest1.CSV'
 GenderMap = {'M' : 0, 'F' : 1}
 UNIQUE_IDS = 8711
 FINAL_SUBMISSION_FILE = 'FinalSubmission.csv'
+SPLIT = 6000
 
 class Runner():
     """docstring for Runner"""
@@ -113,11 +114,12 @@ class Runner():
 
     def split_test_train(self,X,y,per=0.7):
         """ Split Test Train """
-        msk = np.random.rand(len(X)) < per
-        X_train = X[msk]
-        X_test = X[~msk]
-        y_train = y[msk]
-        y_test = y[~msk]
+        #msk = np.random.rand(len(X)) < per
+        # better split to always safely cross validate
+        indices = np.random.permutation(X.shape[0])
+        train_idx, test_idx = indices[:SPLIT], indices[SPLIT:]
+        X_train,X_test = X[train_idx], X[test_idx]
+        y_train,y_test = y[train_idx], y[test_idx]
         return X_train,X_test,y_train,y_test
 
     def aggregateColumns(self,stype='test'):
@@ -171,18 +173,29 @@ class Runner():
         lg = ln.logistic(iter_n=100)
         lg.fit(X_train,y_train)
         y_p = lg.predict(X_test)
-        print 'Accuracy:',self.accuracy(y_p,y_test)
+        print 'Cross Validation ...'
+        scores,pred = ln.cross_validation().cross_val_score(lg,X_train,y_train,5)
+        print 'Accuracy CV:',self.accuracy(pred,y_train)
+        print 'Accuracy Model:',self.accuracy(y_p,y_test)
         print 'Running Naive Bayes'
         lnb = ln.NaiveBayes()
         lnb.fit(X_train,y_train)
         y_p1 = lnb.predict(X_test)
-        print 'Accuracy:',self.accuracy(y_p1,y_test)
+        print 'Cross Validation ...'
+        scores,pred = ln.cross_validation().cross_val_score(lnb,X_train,y_train,5)
+        print 'Accuracy CV:',self.accuracy(pred,y_train)
+        print 'Accuracy Model:',self.accuracy(y_p1,y_test)
         X,y = self.getRegData()
+        X = X.as_matrix()
+        y = y.as_matrix()
         X_train,X_test,y_train,y_test = self.split_test_train(X,y)
         print 'Running Linear Regression'
         lr = ln.linearRegression(iter_n=500)
         lr.fit(X_train,y_train)
         y_p2 = lr.predict(X_test)
+        print 'Cross Validation ...'
+        scores,pred = ln.cross_validation().cross_val_score(lr,X_train,y_train,5)
+        print 'MSE CV:',self.mse(pred,y_train)
         print 'Mean Squared Error : ',self.mse(y_p2,y_test)
         ## store thetas for future prediction
         self.logistic = lg

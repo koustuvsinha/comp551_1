@@ -196,7 +196,7 @@ class NaiveBayes():
 		#print p
 		np.putmask(p, p >= self.cutoff, 1.0)
 		np.putmask(p, p < self.cutoff, 0.0)
-		print p
+		#print p
 		return p
 
 # Implementing cross validation keeping a bit similarity with scikit-learn api
@@ -216,8 +216,12 @@ class cross_validation:
 			clf.fit(X_train,y_train)
 			y_pred = clf.predict(X_test)
 			preds.extend(y_pred.tolist())
-			score =  np.mean(y_test == y_pred)
-			print "Iteration ", i, "Accuracy :",score
+			if isinstance(clf,linearRegression):
+				score = ((y_pred - y_test) ** 2).mean()
+				print "Iteration ", i, "MSE :",score
+			else:
+				score =  np.mean(y_test == y_pred)
+				print "Iteration ", i, "Accuracy :",score
 			scores.append(score)
 		return scores,preds
 
