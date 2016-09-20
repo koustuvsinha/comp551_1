@@ -2,7 +2,7 @@
 
 import pandas as pd
 import numpy as np
-import linear as ln
+import learner as ln
 
 YEARS = [2012,2013,2014,2015]
 TOPREDICT = 2016
@@ -16,11 +16,11 @@ FINAL_SUBMISSION_FILE = 'FinalSubmission.csv'
 
 class Runner():
     """docstring for Runner"""
-    def __init__(self, arg):
+    def __init__(self):
         self.data = pd.read_csv(DATA_FILE)
         self.dataReg = pd.read_csv(REG_DATA_FILE)
-        validation()
-        prediction()
+        self.validation()
+        self.prediction()
 
 
     def transformYearData(self,num_users):
@@ -31,7 +31,7 @@ class Runner():
         for x in range(num_users):
             nr = np.zeros(len(YEARS)) # 2012, 2013, 2014, 2015
             for i,rec in mon_mara[mon_mara['PARTICIPANT_ID'] == x].iterrows():
-                nr[years.index(rec['YEAR'])] = 1
+                nr[YEARS.index(rec['YEAR'])] = 1
             ndr.append(nr)
         ndr = np.vstack(ndr)
         return np.array(ndr)
@@ -78,11 +78,12 @@ class Runner():
 
     def transformYearTotalData(self,num_users):
         """ Total Events Participated by User in each year """
+        years = [2012,2013,2014,2015,2016]
         data = self.data
         ndr = []
         dt = data.groupby(['PARTICIPANT_ID','YEAR']).agg('count').reset_index().sort_values('EVENT_DATE',ascending=False)
         for x in range(num_users):
-            nr = np.zeros(len(YEARS)) # 2012, 2013, 2014, 2015 and 2016
+            nr = np.zeros(len(years)) # 2012, 2013, 2014, 2015 and 2016
             for i,rec in dt[dt['PARTICIPANT_ID'] == x].iterrows():
                 nr[years.index(rec['YEAR'])] = rec['EVENT_DATE']
             ndr.append(nr)
@@ -103,7 +104,7 @@ class Runner():
             done = False
             for i,rec in data[data['PARTICIPANT_ID'] == x].iterrows():
                 if rec['GENDER'] == 'M' or rec['GENDER'] == 'F':
-                    ndr.append(genderMap[rec['GENDER']])
+                    ndr.append(GenderMap[rec['GENDER']])
                     done = True
                     break
             if not done:
@@ -121,13 +122,13 @@ class Runner():
 
     def aggregateColumns(self,stype='test'):
         """ Aggregate all columns and return X and y """
-        ndr_age = meanAge()
-        ndr_gender = transformGender(UNIQUE_IDS)
-        ndr_mara = transformTotalMara(UNIQUE_IDS)
-        ndr_total = transformTotal(UNIQUE_IDS)
-        ndr_total_m = transformTotalMaraMon(UNIQUE_IDS)
-        ndr_total_year = transformYearTotalData(UNIQUE_IDS)
-        ndr_year = transformYearData(UNIQUE_IDS)
+        ndr_age = self.meanAge()
+        ndr_gender = self.transformGender(UNIQUE_IDS)
+        ndr_mara = self.transformTotalMara(UNIQUE_IDS)
+        ndr_total = self.transformTotal(UNIQUE_IDS)
+        ndr_total_m = self.transformTotalMaraMon(UNIQUE_IDS)
+        ndr_total_year = self.transformYearTotalData(UNIQUE_IDS)
+        ndr_year = self.transformYearData(UNIQUE_IDS)
         ndr_all_but_yr = np.concatenate((ndr_age,ndr_gender,ndr_mara,ndr_total,ndr_total_m,ndr_total_year),axis=1)
         ndr_year_X = []
         ndr_year_y = []
@@ -135,7 +136,7 @@ class Runner():
             ndr_year_X = ndr_year[:,[0,1,2]] # taking 2012,2013 and 2014 for X
             ndr_year_y = ndr_year[:,[3]].reshape((-1,)) # taking 2015
         else:
-            ndr_year_X = ndr_year[:,[1,2,3]].reshape((-1,)) # prediction case, 2013, 2014 and 2015
+            ndr_year_X = ndr_year[:,[1,2,3]] # prediction case, 2013, 2014 and 2015
         X = np.concatenate((ndr_all_but_yr, ndr_year_X), axis=1)
         y = ndr_year_y
         return X,y
@@ -144,7 +145,7 @@ class Runner():
         """ Calculate Classification Accuracy """
         return np.mean(y_pred == y_true)
 
-    def mse(y_pred, y_true):
+    def mse(self,y_pred, y_true):
         """ Calculate Mean Squared Error for Regression """
         return ((y_pred - y_true) ** 2).mean()
 
@@ -163,26 +164,26 @@ class Runner():
     def validation(self):
         """ Validate all algorithms for train test set """
         ## feature engineering for classification
-        X,y = aggregateColumns()
-        X_train,X_test,y_train,y_test = split_test_train(X,y)
+        X,y = self.aggregateColumns()
+        X_train,X_test,y_train,y_test = self.split_test_train(X,y)
         # Logistic Regression
         print 'Running Logistic Regression'
         lg = ln.logistic(iter_n=100)
         lg.fit(X_train,y_train)
         y_p = lg.predict(X_test)
-        print 'Accuracy:',accuracy(y_p,y_test)
+        print 'Accuracy:',self.accuracy(y_p,y_test)
         print 'Running Naive Bayes'
         lnb = ln.NaiveBayes()
         lnb.fit(X_train,y_train)
         y_p1 = lnb.predict(X_test)
-        print 'Accuracy:',accuracy(y_p1,y_test)
-        X,y = getRegData()
-        X_train,X_test,y_train,y_test = split_test_train(X,y)
+        print 'Accuracy:',self.accuracy(y_p1,y_test)
+        X,y = self.getRegData()
+        X_train,X_test,y_train,y_test = self.split_test_train(X,y)
         print 'Running Linear Regression'
         lr = ln.linearRegression(iter_n=500)
         lr.fit(X_train,y_train)
         y_p2 = lr.predict(X_test)
-        print 'Mean Squared Error : ',mse(y_p2,y_test)
+        print 'Mean Squared Error : ',self.mse(y_p2,y_test)
         ## store thetas for future prediction
         self.logistic = lg
         self.linear = lr
@@ -191,14 +192,14 @@ class Runner():
     def prediction(self):
         """ Final Prediction for Montreal 2016 Event """
         final_df = pd.DataFrame(columns=['PARTICIPANT_ID','Y1_LOGISTIC','Y1_NAIVEBAYES','Y2_REGRESSION'])
-        X,y = aggregateColumns(stype='predict')
+        X,y = self.aggregateColumns(stype='predict')
         print 'Predicting by Logistic Regression'
         y_log = self.logistic.predict(X)
         print 'Predicted Rows : ', len(y_log)
         print 'Predicting by Naive Bayes'
         y_naive = self.naive.predict(X)
         print 'Predicted Rows :', len(y_naive)
-        X,y = getRegData(stype='predict')
+        X,y = self.getRegData(stype='predict')
         print 'Predicting Linear Regression'
         y_lin = self.linear.predict(X)
         print 'Predicted Rows :',len(y_lin)
@@ -209,8 +210,11 @@ class Runner():
         final_df.to_csv(FINAL_SUBMISSION_FILE)
 
 
+def run():
+    print 'Running'
+    Runner()
 
-
+run()
 
 
 
