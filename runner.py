@@ -9,7 +9,7 @@ TOPREDICT = 2016
 ## Cleaned data file for classification (not feature engineered)
 DATA_FILE = 'final_data_v2.csv'
 ## Cleaned and feature engineered file for regression
-REG_DATA_FILE = 'RegressionTest1.CSV'
+REG_DATA_FILE = 'RegressionAllMarathon.CSV'
 GenderMap = {'M' : 0, 'F' : 1}
 UNIQUE_IDS = 8711
 FINAL_SUBMISSION_FILE = 'FinalSubmission.csv'
@@ -157,10 +157,10 @@ class Runner():
         y = []
         reg = self.dataReg
         if stype == 'train':
-            X = reg[['AGE','GENDER','AvgTimeForMontrealMarathon2012','AvgTimeForMontrealMarathon2013','AvgTimeForMontrealMarathon2014','AvgTimeInAllMarathons','AvgTimeInAllEvents','TotalNoOfMarathonEvents']]
-            y = reg.AvgTimeForMontrealMarathon2015
+            X = reg[['AGE','GENDER','AvgTimeForAllMarathons2012','AvgTimeForAllMarathons2013','AvgTimeForAllMarathons2014','AvgTimeInAllMarathons','AvgTimeInAllEvents','TotalNoOfMarathonEvents']]
+            y = reg.AvgTimeForAllMarathons2015
         else:
-            X = reg[['AGE','GENDER','AvgTimeForMontrealMarathon2013','AvgTimeForMontrealMarathon2014','AvgTimeForMontrealMarathon2015','AvgTimeInAllMarathons','AvgTimeInAllEvents','TotalNoOfMarathonEvents']]
+            X = reg[['AGE','GENDER','AvgTimeForAllMarathons2013','AvgTimeForAllMarathons2014','AvgTimeForAllMarathons2015','AvgTimeInAllMarathons','AvgTimeInAllEvents','TotalNoOfMarathonEvents']]
         return X,y
 
     def validation(self):
@@ -215,11 +215,18 @@ class Runner():
         X,y = self.getRegData(stype='predict')
         print 'Predicting Linear Regression'
         y_lin = self.linear.predict(X)
-        print 'Predicted Rows :',len(y_lin)
+        y_lin = y_lin * 42
+        times = []
+        for seconds in y_lin:
+            m, s = divmod(seconds, 60)
+            h, m = divmod(m, 60)
+            time = "%d:%02d:%02d" % (h, m, s)
+            times.append(time)
+        print 'Predicted Rows :',len(times)
         final_df.PARTICIPANT_ID = range(UNIQUE_IDS)
         final_df.Y1_LOGISTIC = y_log
         final_df.Y1_NAIVEBAYES = y_naive
-        final_df.Y2_REGRESSION = y_lin
+        final_df.Y2_REGRESSION = times
         final_df.to_csv(FINAL_SUBMISSION_FILE)
 
 

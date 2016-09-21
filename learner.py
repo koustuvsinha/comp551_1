@@ -159,44 +159,65 @@ class NaiveBayes():
 			d[u] = np.sum(k==u)
 		return d
 
+	def featureMeanStd(self, col):
+		mu = np.mean(col)
+		sigma = np.std(col)
+		return mu, sigma
+
+	def pdf_Gaussian(self, xj, mu, sigma):
+		return (1/(np.sqrt(2*np.pi) * sigma) * np.exp(-((xj - mu) ** 2)/(2*sigma ** 2)))
+
 	def fit(self,X,y):
 		self.X = np.array(X)
 		self.y = np.array(y)
-		self.m, self.n = X.shape
+		self.m, self.n = self.X.shape
+		Xt = self.X.T
+		self.count_value = [self.value_counts(k) for k in Xt]  # list of dictionaries for every feature
 		rec_where_pos = self.X[self.y == 1].T
 		rec_where_neg = self.X[self.y == 0].T
-		#print rec_where_pos
-		self.count_pos = [self.value_counts(k) for k in rec_where_pos]
-		self.count_neg = [self.value_counts(k) for k in rec_where_neg]
+		self.parameter_pos = []
+		self.parameter_neg = []
+		for index, item in enumerate(self.count_value):
+		    if len(item) == 2:
+		        self.parameter_pos.append(self.value_counts(rec_where_pos[index]))
+		        self.parameter_neg.append(self.value_counts(rec_where_neg[index]))
+		    elif len(item) > 2:
+		        mu1, sigma1 = self.featureMeanStd(rec_where_pos[index])
+		        mu0, sigma0 = self.featureMeanStd(rec_where_neg[index])
+		        self.parameter_pos.append(np.array([mu1, sigma1]))
+		        self.parameter_neg.append(np.array([mu0, sigma0]))
 		self.total_pos = float(sum(self.y==1))
 		self.total_neg = float(sum(self.y==0))
 		total = self.total_pos + self.total_neg
 		self.prior_prob_pos = self.total_pos / total
-		self.prior_prob_neg = self.total_pos / total
+		self.prior_prob_neg = self.total_neg / total
 		#print self.count_pos
 		#print self.count_neg
 
 	def predict(self,X_test):
-		m,n = X_test.shape
-		predictions = np.zeros(m)
 		X_test = np.array(X_test)
-		for i,rows in enumerate(X_test):
-			probXneg = np.zeros(n)
-			probXpos = np.zeros(n)
-			#print rows
-			#print i
-			for j, value in enumerate(rows):
-				#print value
-				n_count = self.count_neg[j].get(value,0)
-				p_count = self.count_pos[j].get(value,0)
-				probXpos = (p_count + self.alpha) / (self.total_pos + self.alpha * len(self.count_pos[j]))
-				probXneg = (n_count + self.alpha) / (self.total_neg + self.alpha * len(self.count_neg[j]))
-			predictions[i] = np.log(self.prior_prob_pos) + np.sum(np.log(probXpos)) - np.log(self.prior_prob_neg) - np.sum(np.log(probXneg))
+		m, n = X_test.shape
+		predictions = np.zeros(m)
+		for i, rows in enumerate(X_test):  # i: sample index
+		    probXneg = np.zeros(n)
+		    probXpos = np.zeros(n)
+		    for j, value in enumerate(rows): # j: feature index
+		        if type(self.parameter_pos[j]) == type(X_test[0]):
+		            mu1 = self.parameter_pos[j][0]
+		            sigma1 = self.parameter_pos[j][1]
+		            mu0 = self.parameter_neg[j][0]
+		            sigma0 = self.parameter_neg[j][1]
+		            probXpos[j] = self.pdf_Gaussian(value, mu1, sigma1)
+		            probXneg[j] = self.pdf_Gaussian(value, mu0, sigma0)
+		        elif type(self.parameter_pos[j] == type(self.count_value[j])):
+		            n_count = self.parameter_neg[j].get(value,0)
+		            p_count = self.parameter_pos[j].get(value,0)
+		            probXpos[j] = (p_count + self.alpha) / (self.total_pos + self.alpha * len(self.parameter_pos[j]))
+		            probXneg[j] = (n_count + self.alpha) / (self.total_neg + self.alpha * len(self.parameter_neg[j]))
+		    predictions[i] = np.log(self.prior_prob_pos) + np.sum(np.log(probXpos)) - np.log(self.prior_prob_neg) - np.sum(np.log(probXneg))
 		p = predictions
-		#print p
 		np.putmask(p, p >= self.cutoff, 1.0)
 		np.putmask(p, p < self.cutoff, 0.0)
-		#print p
 		return p
 
 # Implementing cross validation keeping a bit similarity with scikit-learn api
