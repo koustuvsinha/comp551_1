@@ -17,6 +17,10 @@ Data Cleaning is done in two parts. First the given dataset is row transformed, 
 
 The cleaned data can be found [in this public location](https://github.com/koustuvsinha/data-adventures/tree/master/montreal2016).
 
+## Testing
+
+In order to test our algorithm implementation, we have created a simple test file in [learner_test.py](test/learner_test.py). To run it simply use python command line : `python test/learner_test.py`
+
 ## Authors
 
 * Koustuv Sinha, McGill ID : 260721248, _koustuv.sinha@mail.mcgill.ca_
