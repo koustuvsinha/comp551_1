@@ -9,11 +9,12 @@ import numpy as np
 
 class logistic:
 
-	def __init__(self, alpha=0.07,iter_n=9000, lambd=0.01):
+	def __init__(self, alpha=0.07,iter_n=9000, lambd=0.01, ephsilon=1e-8):
 		# initialization
 		self.alpha = alpha
 		self.iter_n = iter_n # Number of iterations for gradient descent
 		self.lambd = lambd # regularization
+		self.ephsilon = ephsilon # stopping parameter
 
 	# Sigmoid function
 	def sigmoid(self,a):
@@ -40,7 +41,9 @@ class logistic:
 			n = self.X.shape[1]
 			# Can be done in vector operation
 			for j in range(1,n):
-				self.W[j] = w[j] - self.alpha * (1.0 / self.m) * (np.sum(diff.dot(self.X[:,j])) + self.lambd * self.m * w[j])
+				tempTheta = w[j] - self.alpha * (1.0 / self.m) * (np.sum(diff.dot(self.X[:,j])) + self.lambd * self.m * w[j])
+				#print np.linalg.norm(tempTheta)
+				self.W[j] = tempTheta
 			#grad = np.sum(np.dot(diff,self.X))
 			#self.W = self.W - self.alpha * (1.0 / self.m) * grad
 			cost = self.loss()

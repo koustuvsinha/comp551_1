@@ -7,9 +7,9 @@ import learner as ln
 YEARS = [2012,2013,2014,2015]
 TOPREDICT = 2016
 ## Cleaned data file for classification (not feature engineered)
-DATA_FILE = 'final_data_v2.csv'
+DATA_FILE = 'final_data_v3.csv'
 ## Cleaned and feature engineered file for regression
-REG_DATA_FILE = 'RegressionAllMarathon.CSV'
+REG_DATA_FILE = 'RegFin.CSV'
 GenderMap = {'M' : 0, 'F' : 1}
 UNIQUE_IDS = 8711
 FINAL_SUBMISSION_FILE = 'FinalSubmission.csv'
@@ -170,12 +170,16 @@ class Runner():
         X_train,X_test,y_train,y_test = self.split_test_train(X,y)
         # Logistic Regression
         print 'Running Logistic Regression'
-        lg = ln.logistic(iter_n=100)
+        lg = ln.logistic(iter_n=1000,alpha=0.06)
         lg.fit(X_train,y_train)
         y_p = lg.predict(X_test)
         print 'Cross Validation ...'
-        scores,pred = ln.cross_validation().cross_val_score(lg,X_train,y_train,5)
-        print 'Accuracy CV:',self.accuracy(pred,y_train)
+        lambdas = [0.01,0.05,0.001,0.002,0.004]
+        for l in lambdas:
+            print 'Cross Validation for Lamda value %f' % l
+            lg = ln.logistic(iter_n=500,alpha=0.06,lambd=l)
+            scores,pred = ln.cross_validation().cross_val_score(lg,X_train,y_train,5)
+            print 'Accuracy CV:',self.accuracy(pred,y_train)
         print 'Accuracy Model:',self.accuracy(y_p,y_test)
         print 'Running Naive Bayes'
         lnb = ln.NaiveBayes()
