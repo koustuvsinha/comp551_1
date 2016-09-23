@@ -193,3 +193,13 @@ class Process:
 	    #    sys.exit(0)
 	  df['LOCATION'] = df.LOCATION.apply(lambda x : unicode(x).encode("utf-8"))
     self.df = df
+
+  def correctGenders(data):
+    idz = {'M' :[25912,21437,18920,15523,11592,16013,14671,10603,5945,9030,6569,6684,5052,9504,9637,9638,13308,12595],
+       'F' : [2201,3241,24844,18982,17911,15470,11454,10468,26256,12964]
+      }
+
+    for key in idz:
+        for i in idz[key]:
+            data = data.set_value(i,'GENDER',key)
+    return data
