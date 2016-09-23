@@ -24,5 +24,5 @@ In order to test our algorithm implementation, we have created a simple test fil
 ## Authors
 
 * Koustuv Sinha, McGill ID : 260721248, _koustuv.sinha@mail.mcgill.ca_
-* Ramchalam Kinttinkara Ramakrishnan, McGill ID : _ramchalam.kinattinkararamakrishn@mail.mcgill.ca_
+* Ramchalam Kinttinkara Ramakrishnan, McGill ID : 260711189, _ramchalam.kinattinkararamakrishn@mail.mcgill.ca_
 * Xiaoqing Ma, McGill ID : 260668927, _xiaoqing.ma@mail.mcgill.ca_
