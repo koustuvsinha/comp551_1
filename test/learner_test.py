@@ -2,7 +2,8 @@
 # Simple test script to check our implementation
 
 import unittest
-import learner
+import imp
+learner = imp.load_source('learner', 'src/learner.py')
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
