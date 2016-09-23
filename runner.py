@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import learner as ln
+import argparse
 
 YEARS = [2012,2013,2014,2015]
 TOPREDICT = 2016
@@ -17,9 +18,10 @@ SPLIT = 6000
 
 class Runner():
     """docstring for Runner"""
-    def __init__(self):
-        self.data = pd.read_csv(DATA_FILE)
-        self.dataReg = pd.read_csv(REG_DATA_FILE)
+    def __init__(self,data_file,reg_data_file,final_file):
+        self.data = pd.read_csv(data_file)
+        self.dataReg = pd.read_csv(reg_data_file)
+        self.finalSub = final_file
         self.validation()
         self.prediction()
 
@@ -166,6 +168,7 @@ class Runner():
     def validation(self):
         """ Validate all algorithms for train test set """
         ## feature engineering for classification
+        print 'Cleaning Data ...'
         X,y = self.aggregateColumns()
         X_train,X_test,y_train,y_test = self.split_test_train(X,y)
         # Logistic Regression
@@ -231,14 +234,16 @@ class Runner():
         final_df.Y1_LOGISTIC = y_log
         final_df.Y1_NAIVEBAYES = y_naive
         final_df.Y2_REGRESSION = times
-        final_df.to_csv(FINAL_SUBMISSION_FILE)
+        final_df.to_csv(self.finalSub)
 
 
-def run():
-    print 'Running'
-    Runner()
-
-run()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c','--classification',type=str, help='Classification File', required=True)
+    parser.add_argument('-r','--regression',type=str, help='Regression File',required=True)
+    parser.add_argument('-s','--submission',type=str, help='Submission File',required=True)
+    args = parser.parse_args()
+    Runner(args.classification,args.regression,args.submission)
 
 
 
